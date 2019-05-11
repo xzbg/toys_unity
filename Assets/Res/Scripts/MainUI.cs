@@ -7,7 +7,7 @@ using UnityEngine.UI;
 public class MainUI : MonoBehaviour
 {
     public Button m_startBtn;
-    public Grid grid;
+    public CellController grid;
 
     // Use this for initialization
     void Start()

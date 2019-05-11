@@ -4,7 +4,7 @@ using System.Collections;
 using System;
 using System.Collections.Generic;
 
-public class Grid : MonoBehaviour
+public class CellController : MonoBehaviour
 {
     private ObjectMatrix<Cell> m_cellMatrix;
     private ObjectMatrix<Item> m_itemMatrix;

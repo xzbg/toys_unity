@@ -6,23 +6,26 @@ using System.Collections.Generic;
 
 public class CellController : MonoBehaviour
 {
-    private ObjectMatrix<Cell> m_cellMatrix;
-    private ObjectMatrix<Item> m_itemMatrix;
+    private ObjectMatrix<Cell> m_cellMatrix = null;
+    private ObjectMatrix<Item> m_itemMatrix = null;
+    private List<Item> m_operateList = null;
 
     public Item m_item_prefab;
     public Cell m_cell_prefab;
 
+
     // Use this for initialization
     void Start()
     {
-
+        m_cellMatrix = new ObjectMatrix<Cell>(AppConst.Rows, AppConst.Columns);
+        m_itemMatrix = new ObjectMatrix<Item>(AppConst.Rows, AppConst.Columns);
+        m_operateList = new List<Item>();
     }
 
     // 初始化格子
     public void Init()
     {
-        m_cellMatrix = new ObjectMatrix<Cell>(AppConst.Rows, AppConst.Columns);
-        m_itemMatrix = new ObjectMatrix<Item>(AppConst.Rows, AppConst.Columns);
+        m_operateList.Clear();
         for (int i = 0; i < m_cellMatrix.Row; i++)
         {
             for (int j = 0; j < m_cellMatrix.Column; j++)
@@ -88,6 +91,7 @@ public class CellController : MonoBehaviour
         }
         Item pre = null;
         Item current = null;
+        m_operateList.Clear();
         for (int i = 0; i < m_itemMatrix.Row; i++)
         {
             current = null;
@@ -103,16 +107,16 @@ public class CellController : MonoBehaviour
                     current.IsOverdue = false;
                     pre.Value = pre.Value + current.Value;
                     current.IsRemove = true;
-                    continue;
+                    m_operateList.Add(current);
                 }
-
                 if (index != j)
                 {
                     current.NextRaw = i;
                     current.NextColumn = index;
+                    m_operateList.Add(current);
+                    index += split;
                 }
                 pre = current;
-                index += split;
             }
         }
         DOResult();
@@ -132,6 +136,7 @@ public class CellController : MonoBehaviour
         }
         Item pre = null;
         Item current = null;
+        m_operateList.Clear();
         for (int i = 0; i < m_itemMatrix.Column; i++)
         {
             current = null;
@@ -147,16 +152,16 @@ public class CellController : MonoBehaviour
                     current.IsOverdue = false;
                     pre.Value = pre.Value + current.Value;
                     current.IsRemove = true;
-                    continue;
+                    m_operateList.Add(current);
                 }
-
                 if (index != j)
                 {
                     current.NextRaw = index;
                     current.NextColumn = i;
+                    m_operateList.Add(current);
+                    index += split;
                 }
                 pre = current;
-                index += split;
             }
         }
         DOResult();
@@ -165,6 +170,32 @@ public class CellController : MonoBehaviour
     // 执行结果
     public void DOResult()
     {
+        for (int i = 0; i < m_operateList.Count; i++)
+        {
+            if (m_operateList[i] == null) continue;
+            Item item = m_operateList[i];
+            if (item.IsRemove)
+            {
+                Cell cell = m_cellMatrix[item.Raw, item.Column];
+                cell.item = null;
+                item.transform.SetParent(null);
+                m_itemMatrix[item.Raw, item.Column] = null;
+                Destroy(item.gameObject);
+                continue;
+            }
+            if (item.NextRaw != -1 && item.NextColumn != -1)
+            {
+                Cell cell = m_cellMatrix[item.Raw, item.Column];
+                Cell nextCell = m_cellMatrix[item.NextRaw, item.NextColumn];
+                cell.item = null;
+                nextCell.item = item;
+                item.transform.SetParent(nextCell.transform, false);
+                item.Raw = item.NextRaw;
+                item.Column = item.NextColumn;
+                item.NextRaw = -1;
+                item.NextColumn = -1;
+            }
+        }
         for (int i = 0; i < m_itemMatrix.Row; i++)
         {
             for (int j = 0; j < m_itemMatrix.Column; j++)
@@ -173,27 +204,8 @@ public class CellController : MonoBehaviour
                 Item item = m_itemMatrix[i, j];
                 item.IsOverdue = true;
                 item.IsRemove = false;
-                if (item.IsRemove)
-                {
-                    Cell cell = m_cellMatrix[i, j];
-                    cell.item = null;
-                    item.transform.SetParent(null);
-                    m_itemMatrix[i, j] = null;
-                    Destroy(item.gameObject);
-                    continue;
-                }
-                if (item.NextRaw != -1 && item.NextColumn != -1)
-                {
-                    Cell cell = m_cellMatrix[item.Raw, item.Column];
-                    Cell nextCell = m_cellMatrix[item.NextRaw, item.NextColumn];
-                    cell.item = null;
-                    nextCell.item = item;
-                    item.transform.SetParent(nextCell.transform, false);
-                    item.Raw = item.NextRaw;
-                    item.Column = item.NextColumn;
-                    item.NextRaw = -1;
-                    item.NextColumn = -1;
-                }
+                item.NextRaw = -1;
+                item.NextColumn = -1;
             }
         }
         RandomAdd();

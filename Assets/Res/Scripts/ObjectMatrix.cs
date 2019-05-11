@@ -31,7 +31,7 @@ public class ObjectMatrix<T>
     }
 
     // 获得一个随机空位
-    public void RandomEmptyIndex(out int row, out int column)
+    public List<int[]> RandomEmptyIndex(int num)
     {
         List<int[]> emptyList = new List<int[]>();
         for (int i = 0; i < Row; i++)
@@ -42,17 +42,14 @@ public class ObjectMatrix<T>
                     emptyList.Add(new int[] { i, j });
             }
         }
-        if (emptyList.Count > 0)
+        List<int[]> resulst = new List<int[]>();
+        for (int i = 0; emptyList.Count > 0 && i < num; i++)
         {
             int index = m_random.Next(0, emptyList.Count);
-            row = emptyList[index][0];
-            column = emptyList[index][1];
+            resulst.Add(emptyList[index]);
+            emptyList.RemoveAt(index);
         }
-        else
-        {
-            row = -1;
-            column = -1;
-        }
+        return resulst;
     }
 
 }

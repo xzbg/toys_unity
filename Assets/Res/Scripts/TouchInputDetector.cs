@@ -27,17 +27,16 @@ public class TouchInputDetector : MonoBehaviour, IInputDetector
     public InputDirection? TouchEnd(Vector2 touchPostion)
     {
         TimeSpan timeDifference = DateTime.Now - timeSwipeStarted;
+        Debug.LogFormat("timeDifference={0},maxSwipeDuration={1},minSwipeDuration={2}", timeDifference.TotalMilliseconds, maxSwipeDuration.TotalMilliseconds, minSwipeDuration.TotalMilliseconds);
         if (timeDifference <= maxSwipeDuration && timeDifference >= minSwipeDuration)
         {
             Vector2 differenceVector = touchPostion - startPoint;
+            if (differenceVector.magnitude <= 100)
+                return null;
             float angle = Vector2.Angle(differenceVector, Vector2.right);
             Vector3 cross = Vector3.Cross(differenceVector, Vector2.right);
-
             if (cross.z > 0)
                 angle = 360 - angle;
-
-            state = TouchState.SwipeNotStarted;
-
             if ((angle >= 315 && angle < 360) || (angle >= 0 && angle <= 45))
                 return InputDirection.Right;
             else if (angle > 45 && angle <= 135)
@@ -66,14 +65,18 @@ public class TouchInputDetector : MonoBehaviour, IInputDetector
         }
         else if (state == TouchState.SwipeStarted)
         {
+            InputDirection? input = null;
             if (Application.isMobilePlatform && Input.touchCount > 0)
             {
-                return TouchEnd(Input.GetTouch(0).position);
+                input = TouchEnd(Input.GetTouch(0).position);
+                state = TouchState.SwipeNotStarted;
             }
             else if (Input.GetMouseButtonUp(0))
             {
-                return TouchEnd(Input.mousePosition);
+                input = TouchEnd(Input.mousePosition);
+                state = TouchState.SwipeNotStarted;
             }
+            return input;
         }
         return null;
     }

@@ -47,26 +47,30 @@ public class CellController : MonoBehaviour
                 m_cellMatrix[i, j] = cell;
             }
         }
-        RandomAdd();
-        RandomAdd();
+        RandomAdd(2);
     }
 
     // 需要优化获取随机数的方式，一次可以获取多个随机数
-    public void RandomAdd()
+    public void RandomAdd(int num)
     {
-        int row, column = 0;
-        m_itemMatrix.RandomEmptyIndex(out row, out column);
-        if (row == -1 || column == -1)
+
+        List<int[]> resulst = m_itemMatrix.RandomEmptyIndex(num);
+        if (resulst == null || resulst.Count <= 0)
         {
             GameManager.Instance.GameOver();
             return;
         }
-        Cell cell = m_cellMatrix[row, column];
-        cell.item = Instantiate<Item>(m_item_prefab, cell.transform);
-        cell.item.Raw = row;
-        cell.item.Column = column;
-        cell.item.InitRandomValue();
-        m_itemMatrix[row, column] = cell.item;
+        for (int i = 0; i < resulst.Count; i++)
+        {
+            int row = resulst[i][0];
+            int column = resulst[i][1];
+            Cell cell = m_cellMatrix[row, column];
+            cell.item = Instantiate<Item>(m_item_prefab, cell.transform);
+            cell.item.Raw = row;
+            cell.item.Column = column;
+            cell.item.InitRandomValue();
+            m_itemMatrix[row, column] = cell.item;
+        }
     }
 
     public void DOMove(InputDirection input)
@@ -109,13 +113,14 @@ public class CellController : MonoBehaviour
                     current.IsRemove = true;
                     m_operateList.Add(current);
                 }
-                if (index != j)
+                if (!current.IsRemove && index != j)
                 {
                     current.NextRaw = i;
                     current.NextColumn = index;
                     m_operateList.Add(current);
-                    index += split;
                 }
+                if (!current.IsRemove)
+                    index += split;
                 pre = current;
             }
         }
@@ -154,21 +159,46 @@ public class CellController : MonoBehaviour
                     current.IsRemove = true;
                     m_operateList.Add(current);
                 }
-                if (index != j)
+                if (!current.IsRemove && index != j)
                 {
                     current.NextRaw = index;
                     current.NextColumn = i;
                     m_operateList.Add(current);
-                    index += split;
                 }
+                if (!current.IsRemove)
+                    index += split;
                 pre = current;
             }
         }
         DOResult();
     }
 
+    // 切换格子
+    private void SwapCell(Item item)
+    {
+        if (item.NextRaw != -1 && item.NextColumn != -1)
+        {
+            Item nextItem = m_itemMatrix[item.NextRaw, item.NextColumn];
+            if (nextItem != null)
+            {
+                SwapCell(nextItem);
+            }
+            Cell cell = m_cellMatrix[item.Raw, item.Column];
+            Cell nextCell = m_cellMatrix[item.NextRaw, item.NextColumn];
+            cell.item = null;
+            nextCell.item = item;
+            item.transform.SetParent(nextCell.transform, false);
+            m_itemMatrix[item.Raw, item.Column] = null;
+            m_itemMatrix[item.NextRaw, item.NextColumn] = item;
+            item.Raw = item.NextRaw;
+            item.Column = item.NextColumn;
+            item.NextRaw = -1;
+            item.NextColumn = -1;
+        }
+    }
+
     // 执行结果
-    public void DOResult()
+    private void DOResult()
     {
         for (int i = 0; i < m_operateList.Count; i++)
         {
@@ -185,30 +215,25 @@ public class CellController : MonoBehaviour
             }
             if (item.NextRaw != -1 && item.NextColumn != -1)
             {
-                Cell cell = m_cellMatrix[item.Raw, item.Column];
-                Cell nextCell = m_cellMatrix[item.NextRaw, item.NextColumn];
-                cell.item = null;
-                nextCell.item = item;
-                item.transform.SetParent(nextCell.transform, false);
-                item.Raw = item.NextRaw;
-                item.Column = item.NextColumn;
-                item.NextRaw = -1;
-                item.NextColumn = -1;
+                SwapCell(item);
             }
         }
-        for (int i = 0; i < m_itemMatrix.Row; i++)
+        if (m_operateList.Count > 0)
         {
-            for (int j = 0; j < m_itemMatrix.Column; j++)
+            for (int i = 0; i < m_itemMatrix.Row; i++)
             {
-                if (m_itemMatrix[i, j] == null) continue;
-                Item item = m_itemMatrix[i, j];
-                item.IsOverdue = true;
-                item.IsRemove = false;
-                item.NextRaw = -1;
-                item.NextColumn = -1;
+                for (int j = 0; j < m_itemMatrix.Column; j++)
+                {
+                    if (m_itemMatrix[i, j] == null) continue;
+                    Item item = m_itemMatrix[i, j];
+                    item.IsOverdue = true;
+                    item.IsRemove = false;
+                    item.NextRaw = -1;
+                    item.NextColumn = -1;
+                }
             }
+            RandomAdd(1);
         }
-        RandomAdd();
     }
 
     // Update is called once per frame

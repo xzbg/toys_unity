@@ -2,15 +2,37 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GameManager : MonoBehaviour
+public class GameManager : MonoSingleton<GameManager>
 {
-    public IInputDetector touchIput;
-    public IInputDetector arrowKeyInput;
+    // 游戏主界面
+    public MainUI mainUI;
+
+    private IInputDetector touchIput;
+    private IInputDetector arrowKeyInput;
     // Use this for initialization
     void Start()
     {
         touchIput = gameObject.AddComponent<TouchInputDetector>();
         arrowKeyInput = gameObject.AddComponent<ArrowKeyInputDetector>();
+    }
+
+    public void GameStart()
+    {
+        AppConst.gameState = GameState.ON;
+        if (mainUI != null)
+        {
+            mainUI.GameStart();
+        }
+    }
+
+    public void GameOver()
+    {
+        AppConst.gameState = GameState.OFF;
+        if (mainUI != null)
+        {
+            Debug.Log("Game Over!");
+            mainUI.GameOver();
+        }
     }
 
     // Update is called once per frame
@@ -21,13 +43,13 @@ public class GameManager : MonoBehaviour
             InputDirection? input = touchIput.DetectInputDirection();
             if (input.HasValue)
             {
-                Debug.Log(input.Value);
+                if (mainUI != null) mainUI.DoMove(input.Value);
                 return;
             }
             input = arrowKeyInput.DetectInputDirection();
             if (input.HasValue)
             {
-                Debug.Log(input.Value);
+                if (mainUI != null) mainUI.DoMove(input.Value);
             }
         }
     }

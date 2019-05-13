@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using System;
 using System.Collections.Generic;
+using DG.Tweening;
 
 public class CellController : MonoBehaviour
 {
@@ -200,7 +201,17 @@ public class CellController : MonoBehaviour
     // 执行结果
     private void DOResult()
     {
+        Sequence sequence = DOTween.Sequence();
+
         for (int i = 0; i < m_operateList.Count; i++)
+        {
+            if (m_operateList[i] == null) continue;
+            Item item = m_operateList[i];
+            
+        }
+
+
+            for (int i = 0; i < m_operateList.Count; i++)
         {
             if (m_operateList[i] == null) continue;
             Item item = m_operateList[i];

@@ -55,7 +55,11 @@ public class TouchInputDetector : MonoBehaviour, IInputDetector
         {
             if (Application.isMobilePlatform && Input.touchCount > 0)
             {
-                TouchStart(Input.GetTouch(0).position);
+                Touch touch = Input.touches[0];
+                if (touch.phase == TouchPhase.Began)
+                {
+                    TouchStart(touch.position);
+                }
             }
             else if (Input.GetMouseButtonDown(0))
             {
@@ -67,8 +71,12 @@ public class TouchInputDetector : MonoBehaviour, IInputDetector
             InputDirection? input = null;
             if (Application.isMobilePlatform && Input.touchCount > 0)
             {
-                input = TouchEnd(Input.GetTouch(0).position);
-                state = TouchState.SwipeWait;
+                Touch touch = Input.touches[0];
+                if (touch.phase == TouchPhase.Ended)
+                {
+                    input = TouchEnd(touch.position);
+                    state = TouchState.SwipeWait;
+                }
             }
             else if (Input.GetMouseButtonUp(0))
             {

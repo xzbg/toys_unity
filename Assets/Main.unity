@@ -117,7 +117,7 @@ NavMeshSettings:
 MonoBehaviour:
   m_PrefabParentObject: {fileID: 114318879103313240, guid: 69068dfd76ce262428d0ab2841481727,
     type: 2}
-  m_PrefabInternal: {fileID: 912240091}
+  m_PrefabInternal: {fileID: 1252576478}
   m_Script: {fileID: 11500000, guid: d7fa168ff5941044eb7aba5b0f43547a, type: 3}
 --- !u!1 &503202708
 GameObject:
@@ -262,7 +262,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &912240091
+--- !u!1001 &1252576478
 Prefab:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -357,36 +357,6 @@ Prefab:
     - target: {fileID: 224612161401527764, guid: 69068dfd76ce262428d0ab2841481727,
         type: 2}
       propertyPath: m_Pivot.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 224634781854096940, guid: 69068dfd76ce262428d0ab2841481727,
-        type: 2}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 224634781854096940, guid: 69068dfd76ce262428d0ab2841481727,
-        type: 2}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 224634781854096940, guid: 69068dfd76ce262428d0ab2841481727,
-        type: 2}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 224634781854096940, guid: 69068dfd76ce262428d0ab2841481727,
-        type: 2}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 224634781854096940, guid: 69068dfd76ce262428d0ab2841481727,
-        type: 2}
-      propertyPath: m_SizeDelta.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 224634781854096940, guid: 69068dfd76ce262428d0ab2841481727,
-        type: 2}
-      propertyPath: m_SizeDelta.y
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

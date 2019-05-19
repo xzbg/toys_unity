@@ -18,7 +18,7 @@ public class GameManager : MonoSingleton<GameManager>
 
     public void GameStart()
     {
-        AppConst.gameState = GameState.ON;
+        AppConst.gameState = GameState.READY;
         if (mainUI != null)
         {
             mainUI.GameStart();
@@ -27,7 +27,7 @@ public class GameManager : MonoSingleton<GameManager>
 
     public void GameOver()
     {
-        AppConst.gameState = GameState.OFF;
+        AppConst.gameState = GameState.STOP;
         if (mainUI != null)
         {
             Debug.Log("Game Over!");
@@ -38,7 +38,7 @@ public class GameManager : MonoSingleton<GameManager>
     // Update is called once per frame
     void Update()
     {
-        if (AppConst.gameState == GameState.ON)
+        if (AppConst.gameState == GameState.READY)
         {
             InputDirection? input = touchIput.DetectInputDirection();
             if (input.HasValue)

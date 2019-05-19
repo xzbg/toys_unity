@@ -10,6 +10,6 @@ public enum InputDirection
 
 public enum TouchState
 {
-    SwipeNotStarted,
+    SwipeWait,
     SwipeStarted
 }

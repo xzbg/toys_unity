@@ -9,7 +9,7 @@ using UnityEngine;
 /// </summary>
 public class TouchInputDetector : MonoBehaviour, IInputDetector
 {
-    private TouchState state = TouchState.SwipeNotStarted;
+    private TouchState state = TouchState.SwipeWait;
     private Vector2 startPoint;
     private DateTime timeSwipeStarted;
     private TimeSpan maxSwipeDuration = TimeSpan.FromSeconds(1);
@@ -27,7 +27,6 @@ public class TouchInputDetector : MonoBehaviour, IInputDetector
     public InputDirection? TouchEnd(Vector2 touchPostion)
     {
         TimeSpan timeDifference = DateTime.Now - timeSwipeStarted;
-        Debug.LogFormat("timeDifference={0},maxSwipeDuration={1},minSwipeDuration={2}", timeDifference.TotalMilliseconds, maxSwipeDuration.TotalMilliseconds, minSwipeDuration.TotalMilliseconds);
         if (timeDifference <= maxSwipeDuration && timeDifference >= minSwipeDuration)
         {
             Vector2 differenceVector = touchPostion - startPoint;
@@ -52,7 +51,7 @@ public class TouchInputDetector : MonoBehaviour, IInputDetector
 
     public InputDirection? DetectInputDirection()
     {
-        if (state == TouchState.SwipeNotStarted)
+        if (state == TouchState.SwipeWait)
         {
             if (Application.isMobilePlatform && Input.touchCount > 0)
             {
@@ -69,12 +68,12 @@ public class TouchInputDetector : MonoBehaviour, IInputDetector
             if (Application.isMobilePlatform && Input.touchCount > 0)
             {
                 input = TouchEnd(Input.GetTouch(0).position);
-                state = TouchState.SwipeNotStarted;
+                state = TouchState.SwipeWait;
             }
             else if (Input.GetMouseButtonUp(0))
             {
                 input = TouchEnd(Input.mousePosition);
-                state = TouchState.SwipeNotStarted;
+                state = TouchState.SwipeWait;
             }
             return input;
         }

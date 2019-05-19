@@ -9,7 +9,8 @@ public class CellController : MonoBehaviour
 {
     private ObjectMatrix<Cell> m_cellMatrix = null;
     private ObjectMatrix<Item> m_itemMatrix = null;
-    private List<Item> m_operateList = null;
+    private List<Item> m_removeList = new List<Item>();
+    private List<Item> m_moveList = new List<Item>();
 
     public Item m_item_prefab;
     public Cell m_cell_prefab;
@@ -20,13 +21,13 @@ public class CellController : MonoBehaviour
     {
         m_cellMatrix = new ObjectMatrix<Cell>(AppConst.Rows, AppConst.Columns);
         m_itemMatrix = new ObjectMatrix<Item>(AppConst.Rows, AppConst.Columns);
-        m_operateList = new List<Item>();
     }
 
     // 初始化格子
     public void Init()
     {
-        m_operateList.Clear();
+        m_removeList.Clear();
+        m_moveList.Clear();
         for (int i = 0; i < m_cellMatrix.Row; i++)
         {
             for (int j = 0; j < m_cellMatrix.Column; j++)
@@ -52,15 +53,15 @@ public class CellController : MonoBehaviour
     }
 
     // 需要优化获取随机数的方式，一次可以获取多个随机数
-    public void RandomAdd(int num)
+    public Tween RandomAdd(int num)
     {
-
         List<int[]> resulst = m_itemMatrix.RandomEmptyIndex(num);
         if (resulst == null || resulst.Count <= 0)
         {
             GameManager.Instance.GameOver();
-            return;
+            return null;
         }
+        Sequence seq = DOTween.Sequence();
         for (int i = 0; i < resulst.Count; i++)
         {
             int row = resulst[i][0];
@@ -71,7 +72,12 @@ public class CellController : MonoBehaviour
             cell.item.Column = column;
             cell.item.InitRandomValue();
             m_itemMatrix[row, column] = cell.item;
+            Tween tween = cell.item.transform.DOScale(1.5f, 0.2f);
+            seq.Append(tween);
+            tween = cell.item.transform.DOScale(1f, AppConst.AnimationDuration);
+            seq.Append(tween);
         }
+        return seq;
     }
 
     public void DOMove(InputDirection input)
@@ -96,7 +102,8 @@ public class CellController : MonoBehaviour
         }
         Item pre = null;
         Item current = null;
-        m_operateList.Clear();
+        m_removeList.Clear();
+        m_moveList.Clear();
         for (int i = 0; i < m_itemMatrix.Row; i++)
         {
             current = null;
@@ -112,13 +119,13 @@ public class CellController : MonoBehaviour
                     current.IsOverdue = false;
                     pre.Value = pre.Value + current.Value;
                     current.IsRemove = true;
-                    m_operateList.Add(current);
+                    m_removeList.Add(current);
                 }
                 if (!current.IsRemove && index != j)
                 {
                     current.NextRaw = i;
                     current.NextColumn = index;
-                    m_operateList.Add(current);
+                    m_moveList.Add(current);
                 }
                 if (!current.IsRemove)
                     index += split;
@@ -142,7 +149,8 @@ public class CellController : MonoBehaviour
         }
         Item pre = null;
         Item current = null;
-        m_operateList.Clear();
+        m_removeList.Clear();
+        m_moveList.Clear();
         for (int i = 0; i < m_itemMatrix.Column; i++)
         {
             current = null;
@@ -158,13 +166,13 @@ public class CellController : MonoBehaviour
                     current.IsOverdue = false;
                     pre.Value = pre.Value + current.Value;
                     current.IsRemove = true;
-                    m_operateList.Add(current);
+                    m_removeList.Add(current);
                 }
                 if (!current.IsRemove && index != j)
                 {
                     current.NextRaw = index;
                     current.NextColumn = i;
-                    m_operateList.Add(current);
+                    m_moveList.Add(current);
                 }
                 if (!current.IsRemove)
                     index += split;
@@ -201,35 +209,52 @@ public class CellController : MonoBehaviour
     // 执行结果
     private void DOResult()
     {
+        if (m_removeList.Count <= 0 && m_moveList.Count <= 0)
+            return;
+        AppConst.gameState = GameState.RUN;
         Sequence sequence = DOTween.Sequence();
-
-        for (int i = 0; i < m_operateList.Count; i++)
+        sequence.AppendCallback(() =>
         {
-            if (m_operateList[i] == null) continue;
-            Item item = m_operateList[i];
-            
-        }
-
-
-            for (int i = 0; i < m_operateList.Count; i++)
-        {
-            if (m_operateList[i] == null) continue;
-            Item item = m_operateList[i];
-            if (item.IsRemove)
+            for (int i = 0; i < m_removeList.Count; i++)
             {
+                if (m_removeList[i] == null) continue;
+                Item item = m_removeList[i];
+                item.transform.SetParent(null);
                 Cell cell = m_cellMatrix[item.Raw, item.Column];
                 cell.item = null;
-                item.transform.SetParent(null);
                 m_itemMatrix[item.Raw, item.Column] = null;
                 Destroy(item.gameObject);
-                continue;
             }
+        });
+        sequence.AppendInterval(0.2f);
+        Sequence seq = DOTween.Sequence();
+        for (int i = 0; i < m_moveList.Count; i++)
+        {
+            if (m_moveList[i] == null) continue;
+            Item item = m_moveList[i];
             if (item.NextRaw != -1 && item.NextColumn != -1)
             {
-                SwapCell(item);
+                Cell nextCell = m_cellMatrix[item.NextRaw, item.NextColumn];
+                Tween tween = item.transform.DOMove(nextCell.transform.position, AppConst.AnimationDuration);
+                seq.Insert(0, tween);
             }
         }
-        if (m_operateList.Count > 0)
+        sequence.Append(seq);
+        sequence.AppendCallback(() =>
+        {
+            for (int i = 0; i < m_moveList.Count; i++)
+            {
+                if (m_moveList[i] == null) continue;
+                Item item = m_moveList[i];
+                if (item.NextRaw != -1 && item.NextColumn != -1)
+                {
+                    SwapCell(item);
+                }
+            }
+        });
+        sequence.AppendInterval(0.2f);
+        sequence.Append(RandomAdd(1));
+        sequence.OnComplete(() =>
         {
             for (int i = 0; i < m_itemMatrix.Row; i++)
             {
@@ -241,10 +266,15 @@ public class CellController : MonoBehaviour
                     item.IsRemove = false;
                     item.NextRaw = -1;
                     item.NextColumn = -1;
+                    RectTransform trans = item.transform as RectTransform;
+                    trans.anchoredPosition3D = Vector3.zero;
                 }
             }
-            RandomAdd(1);
-        }
+            if (AppConst.gameState == GameState.RUN)
+            {
+                AppConst.gameState = GameState.READY;
+            }
+        });
     }
 
     // Update is called once per frame
